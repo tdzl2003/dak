@@ -1,0 +1,189 @@
+#include <algorithm>
+
+#include "dak_impl.h"
+
+using namespace dak;
+using namespace dak::impl;
+
+subscription::~subscription()
+{
+	cancel();
+}
+
+center_base::~center_base()
+{
+}
+
+base_subscription::base_subscription(subscription_manager* manager)
+	: weak_subscription_(new weak_subscription(this, manager))
+{
+}
+
+base_subscription::~base_subscription()
+{
+}
+
+void base_subscription::cancel()
+{
+	if (weak_subscription_ != NULL) {
+		release();
+		weak_subscription_->release_subscription();
+		weak_subscription_ = NULL;
+	}
+}
+
+void base_subscription::release()
+{
+}
+
+weak_subscription::weak_subscription(
+	base_subscription* subscription,
+	subscription_manager *manager
+)
+	: subscription_(subscription), manager_(manager)
+{
+}
+
+void weak_subscription::release_subscription()
+{
+	assert(subscription_ != NULL);
+	subscription_ = NULL;
+
+	if (manager_ == NULL) {
+		// This will occured when center was destroyed
+		// or a set_meta subscription was replaced.
+		delete this;
+	}
+}
+
+void weak_subscription::release_manager()
+{
+	assert(manager_ != NULL);
+	manager_ = NULL;
+
+	if (subscription_ == NULL) {
+		delete this;
+	}
+}
+
+weak_subscription_list::weak_subscription_list()
+	: valid_count_(0)
+{
+
+}
+
+weak_subscription_list::weak_subscription_list(weak_subscription_list&& other)
+	: valid_count_(other.valid_count_), subscriptions_(std::move(other.subscriptions_))
+{
+}
+
+weak_subscription_list::~weak_subscription_list()
+{
+	for (
+		auto itor = subscriptions_.begin();
+		itor != subscriptions_.end();
+		++itor
+		)
+	{
+		(*itor)->release_manager();
+	}
+}
+
+void weak_subscription_list::on_subscription_released()
+{
+	--valid_count_;
+
+	// Half of subscriptions was canceled, do clean up.
+	if (valid_count_ * 2 <= subscriptions_.size())
+	{
+		clean_up();
+	}
+}
+
+void weak_subscription_list::clean_up()
+{
+	std::vector<weak_subscription *> copy;
+
+	for (
+		auto itor = subscriptions_.begin();
+		itor != subscriptions_.end();
+		++itor
+		)
+	{
+		if ((*itor)->get_subscription() == NULL)
+		{
+			(*itor)->release_manager();
+		}
+		else {
+			copy.push_back(*itor);
+		}
+	}
+
+	copy.swap(subscriptions_);
+	assert(valid_count_ == subscriptions_.size());
+}
+
+void weak_subscription_list::push_back(weak_subscription *subscription)
+{
+	subscriptions_.push_back(subscription);
+}
+
+message_subscription::message_subscription(subscription_manager* manager, on_message_callback&& on_message)
+	: base_subscription(manager), on_message_(on_message)
+{
+}
+
+void message_subscription::release()
+{
+	auto manager = get_weak()->get_manager();
+	if (manager != NULL)
+	{
+		manager->on_message_subscription_released();
+	}
+}
+
+void message_subscription::invoke(const std::string& message)
+{
+	on_message_(message);
+}
+
+subscription_manager::subscription_manager()
+{
+}
+
+subscription_manager::subscription_manager(subscription_manager&& other)
+	: message_subscriptions_(std::move(other.message_subscriptions_))
+{
+}
+
+subscription_manager::~subscription_manager()
+{
+}
+
+subscription* subscription_manager::subscribe(
+	on_message_callback&& on_message
+)
+{
+	base_subscription* sub = new message_subscription(this, std::move(on_message));
+
+	message_subscriptions_.push_back(sub->get_weak());
+
+	return sub;
+}
+
+void subscription_manager::dispatch(const std::string& message)
+{
+	message_subscriptions_.clean_up();
+
+	for (
+		auto itor = message_subscriptions_.begin();
+		itor != message_subscriptions_.end();
+		++itor
+		)
+	{
+		message_subscription* sub = static_cast<message_subscription*>((*itor)->get_subscription());
+
+		assert(sub != NULL);
+		sub->invoke(message);
+	}
+}

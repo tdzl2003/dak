@@ -1,5 +1,7 @@
 SET(LOCAL_SOURCES_FILES
 	../dak/dak.h
+	dak_impl.h
+	dak.cpp
 	logic_subscription.h
     logic_subscription.cpp
 	)
