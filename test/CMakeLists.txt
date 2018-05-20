@@ -5,10 +5,10 @@ else()
   add_definitions(-D_WIN32_WINNT=0x600)
 endif()
 
-add_executable(test_logic
-  logic_test.cpp
+add_executable(test_local_center
+  test_local_center.cpp
 )
 
-target_link_libraries(test_logic PUBLIC Boost::boost Boost::unit_test_framework libdak_static)
+target_link_libraries(test_local_center PUBLIC Boost::boost Boost::unit_test_framework libdak_static)
 
-add_test(NAME test_logic COMMAND test_logic)
+add_test(NAME test_local_center COMMAND test_local_center)

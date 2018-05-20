@@ -7,10 +7,13 @@ using namespace dak::impl;
 
 subscription::~subscription()
 {
-	cancel();
 }
 
-center_base::~center_base()
+void subscription::cancel()
+{
+}
+
+center::~center()
 {
 }
 
@@ -26,8 +29,8 @@ base_subscription::~base_subscription()
 void base_subscription::cancel()
 {
 	if (weak_subscription_ != NULL) {
-		release();
 		weak_subscription_->release_subscription();
+		release();
 		weak_subscription_ = NULL;
 	}
 }
@@ -42,6 +45,12 @@ weak_subscription::weak_subscription(
 )
 	: subscription_(subscription), manager_(manager)
 {
+}
+
+weak_subscription::~weak_subscription()
+{
+	assert(manager_ == NULL);
+	assert(subscription_ == NULL);
 }
 
 void weak_subscription::release_subscription()
@@ -126,11 +135,17 @@ void weak_subscription_list::clean_up()
 void weak_subscription_list::push_back(weak_subscription *subscription)
 {
 	subscriptions_.push_back(subscription);
+	++valid_count_;
 }
 
 message_subscription::message_subscription(subscription_manager* manager, on_message_callback&& on_message)
-	: base_subscription(manager), on_message_(on_message)
+	: base_subscription(manager), on_message_(std::move(on_message))
 {
+}
+
+message_subscription::~message_subscription()
+{
+	cancel();
 }
 
 void message_subscription::release()
@@ -186,4 +201,11 @@ void subscription_manager::dispatch(const std::string& message)
 		assert(sub != NULL);
 		sub->invoke(message);
 	}
+}
+
+void subscription_manager::post(boost::asio::io_context& io_context, const std::string& message)
+{
+	io_context.post([=]() {
+		this->dispatch(message);
+	});
 }

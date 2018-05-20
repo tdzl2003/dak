@@ -45,13 +45,13 @@ namespace dak {
 	// A center can be a logic center (local, memory) 
 	// or a connection to a remote server(remote, via network)
 	// or connections to serveral remote sharding servers.
-	class center_base
+	class center
 	{
 	public:
 		// Release the center.
 		// Will release connection self if it's a connection
 		// Won't shutdown remote servers or such things.
-		virtual ~center_base();
+		virtual ~center();
 
 		// Shut down the center gracefully.
 		// Any incoming 'send' operation will fail.
@@ -61,7 +61,7 @@ namespace dak {
 		// Send a message to a topic.
 		// It's guaranteed that all subscription to the topic on same center
 		// will be called before 'callback' was called.
-		// Not guaranteed for this on different center with same server.
+		// Not guaranteed on different center with same server.
 		virtual void send(
 			const std::string& topic,
 			const std::string& message,
@@ -80,19 +80,19 @@ namespace dak {
 	};
 
 	// Create a local memory center
-	center_base* create_local_center(
+	center* create_local_center(
 		boost::asio::io_context& io_context
 	);
 
 	// Create a center which connects to a single remote server.
-	center_base* create_remote_center(
+	center* create_remote_center(
 		boost::asio::io_context& io_context,
 		boost::asio::ip::tcp::endpoint endpoint,
 		on_complete_callback&& callback = nullptr
 	);
 
 	// Create a center which connects to serveral remote sharding servers.
-	center_base* create_sharding_center(
+	center* create_sharding_center(
 		boost::asio::io_context& io_context,
 		std::vector<boost::asio::ip::tcp::endpoint> endpoints,
 		on_complete_callback&& callback = nullptr

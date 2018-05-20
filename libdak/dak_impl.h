@@ -43,6 +43,7 @@ namespace dak {
 				base_subscription* subscription,
 				subscription_manager* manager
 			);
+			~weak_subscription();
 
 			base_subscription* get_subscription()
 			{
@@ -109,6 +110,7 @@ namespace dak {
 		{
 		public:
 			message_subscription(subscription_manager* manager, on_message_callback&& on_message);
+			virtual ~message_subscription();
 
 			virtual void release();
 
@@ -129,7 +131,11 @@ namespace dak {
 				on_message_callback&& on_message
 			);
 
+			// Call every on_message
 			void dispatch(const std::string& message);
+
+			// Call every on_message on next tick.
+			void post(boost::asio::io_context& io_context, const std::string& message);
 
 			size_t valid_count()
 			{
