@@ -4,6 +4,10 @@ SET(LOCAL_SOURCES_FILES
 	dak.cpp
 	local_center.h
     local_center.cpp
+	server.h
+	server.cpp
+	client_center.h
+	client_center.cpp
 	)
 
 ADD_LIBRARY(libdak_static

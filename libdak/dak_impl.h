@@ -2,8 +2,10 @@
 
 #include <dak/dak.h>
 
-namespace dak {
-	namespace impl {
+namespace dak 
+{
+	namespace impl 
+	{
 		class weak_subscription;
 		class subscription_manager;
 
@@ -94,12 +96,16 @@ namespace dak {
 
 			void push_back(weak_subscription *subscription);
 
-			auto begin() {
+			auto begin() 
+			{
 				return subscriptions_.begin();
 			}
-			auto end() {
+
+			auto end() 
+			{
 				return subscriptions_.end();
 			}
+
 		private:
 			std::vector<weak_subscription *> subscriptions_;
 			size_t valid_count_;
@@ -154,4 +160,3 @@ namespace dak {
 		};
 	}
 }
-

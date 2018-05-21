@@ -7,7 +7,8 @@
 #include <boost/noncopyable.hpp>
 #include <boost/asio.hpp>
 
-namespace dak {
+namespace dak 
+{
 	enum class error_codes : int
 	{
 		EC_OK = 0,
@@ -43,13 +44,13 @@ namespace dak {
 
 	// Interface of a center.
 	// A center can be a logic center (local, memory) 
-	// or a connection to a remote server(remote, via network)
+	// or a client center which connects to a remote server(remote, via network)
 	// or connections to serveral remote sharding servers.
 	class center
 	{
 	public:
 		// Release the center.
-		// Will release connection self if it's a connection
+		// Will release connection self if it's a client center.
 		// Won't shutdown remote servers or such things.
 		virtual ~center();
 
@@ -84,14 +85,14 @@ namespace dak {
 		boost::asio::io_context& io_context
 	);
 
-	// Create a center which connects to a single remote server.
-	center* create_remote_center(
+	// Create a client center which connects to a single remote server.
+	center* create_client_center(
 		boost::asio::io_context& io_context,
 		boost::asio::ip::tcp::endpoint endpoint,
 		on_complete_callback&& callback = nullptr
 	);
 
-	// Create a center which connects to serveral remote sharding servers.
+	// Create a sharding center which connects to serveral remote sharding servers.
 	center* create_sharding_center(
 		boost::asio::io_context& io_context,
 		std::vector<boost::asio::ip::tcp::endpoint> endpoints,
