@@ -5,10 +5,11 @@ else()
   add_definitions(-D_WIN32_WINNT=0x600)
 endif()
 
-add_executable(test_local_center
-  test_local_center.cpp
+add_executable(test_dak
+  test_dak.cpp
+  callback_assertion.h
 )
 
-target_link_libraries(test_local_center PUBLIC Boost::boost Boost::unit_test_framework libdak_static)
+target_link_libraries(test_dak PUBLIC Boost::boost Boost::unit_test_framework libdak_static)
 
-add_test(NAME test_local_center COMMAND test_local_center)
+add_test(NAME test_dak COMMAND test_dak)
