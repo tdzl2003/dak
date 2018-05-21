@@ -88,4 +88,54 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(center_closed, factory, factory_types)
 	f.run();
 }
 
+// Message to different topic should not be received.
+BOOST_AUTO_TEST_CASE_TEMPLATE(recv_test_negative, factory, factory_types)
+{
+	factory f;
+
+	std::auto_ptr<center> center(f.create_center());
+
+	local_subscription sub(
+		center->subscribe("Topic1",
+			std::move(callback_assertion<on_message_callback>({
+			})),
+			std::move(callback_assertion<on_complete_callback>({
+				std::make_tuple(error_codes::EC_OK)
+			}))
+		)
+	);
+
+	center->send("Topic2", "Hello", std::move(callback_assertion<on_complete_callback>({
+		std::make_tuple(error_codes::EC_OK)
+	})));
+
+	f.run();
+}
+
+// Should not receive callback when subscription was canceled.
+BOOST_AUTO_TEST_CASE_TEMPLATE(unsubscription, factory, factory_types)
+{
+	factory f;
+
+	std::auto_ptr<center> center(f.create_center());
+
+	local_subscription sub(
+		center->subscribe("Topic",
+			std::move(callback_assertion<on_message_callback>({
+			})),
+			std::move(callback_assertion<on_complete_callback>({
+				std::make_tuple(error_codes::EC_OK)
+			}))
+		)
+	);
+
+	sub.reset();
+
+	center->send("Topic", "Hello", std::move(callback_assertion<on_complete_callback>({
+		std::make_tuple(error_codes::EC_OK)
+	})));
+
+	f.run();
+}
+
 BOOST_AUTO_TEST_SUITE_END()
