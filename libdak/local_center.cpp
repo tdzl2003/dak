@@ -8,7 +8,7 @@ center* dak::create_local_center(boost::asio::io_context& io_context) {
 }
 
 local_center::local_center(boost::asio::io_context& io_context)
-	: shutted_down_(false), ioc_(io_context)
+	: base_center(io_context), shutted_down_(false)
 {
 }
 
@@ -77,7 +77,7 @@ subscription* local_center::subscribe(
 		topics_.insert(
 			std::make_pair(
 				topic,
-				subscription_manager()
+				subscription_manager(topic, this)
 			)
 		);
 		itor = topics_.find(topic);

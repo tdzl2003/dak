@@ -6,11 +6,11 @@
 namespace dak {
 	namespace impl {
 		class local_center
-			: public center
+			: public base_center
 		{
 		public:
 			local_center(boost::asio::io_context& io_context);
-			~local_center();
+			virtual ~local_center();
 
 			virtual void shutdown(on_complete_callback&& on_complete);
 
@@ -24,13 +24,9 @@ namespace dak {
 				on_message_callback&& on_message,
 				on_complete_callback&& callback
 			);
+
 		private:
-			friend class subscription_manager;
-
-			std::map<std::string, subscription_manager> topics_;
-
 			bool shutted_down_;
-			boost::asio::io_context& ioc_;
 		};
 	}
 }

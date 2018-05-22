@@ -162,12 +162,15 @@ void message_subscription::invoke(const std::string& message)
 	on_message_(message);
 }
 
-subscription_manager::subscription_manager()
+subscription_manager::subscription_manager(const std::string& topic, base_center* center)
+	: topic_(topic), center_(center)
 {
 }
 
 subscription_manager::subscription_manager(subscription_manager&& other)
 	: message_subscriptions_(std::move(other.message_subscriptions_))
+	, topic_(std::move(other.topic_))
+	, center_(other.center_)
 {
 }
 
@@ -208,4 +211,27 @@ void subscription_manager::post(boost::asio::io_context& io_context, const std::
 	io_context.post([=]() {
 		this->dispatch(message);
 	});
+}
+
+void subscription_manager::on_message_subscription_released()
+{
+	message_subscriptions_.on_subscription_released();
+	if (this->valid_count() == 0) {
+		center_->release_topic(topic_);
+	}
+}
+
+base_center::base_center(boost::asio::io_context& io_context)
+	: ioc_(io_context)
+{
+}
+
+base_center::~base_center()
+{
+}
+
+void base_center::release_topic(const std::string& topic)
+{
+	size_t i = topics_.erase(topic);
+	assert(i == 1);
 }

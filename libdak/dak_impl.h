@@ -125,11 +125,12 @@ namespace dak
 			on_message_callback on_message_;
 		};
 
+		class base_center;
 		class subscription_manager
 			: private boost::noncopyable
 		{
 		public:
-			subscription_manager();
+			subscription_manager(const std::string& topic, base_center* center);
 			subscription_manager(subscription_manager&& other);
 			~subscription_manager();
 
@@ -149,14 +150,28 @@ namespace dak
 			}
 
 		private:
-			void on_message_subscription_released()
-			{
-				message_subscriptions_.on_subscription_released();
-			}
+			void on_message_subscription_released();
 
 			friend class message_subscription;
 
-			weak_subscription_list message_subscriptions_;
+			weak_subscription_list	message_subscriptions_;
+			std::string				topic_;
+			base_center*			center_;
+		};
+
+		class base_center
+			: public center
+		{
+		public:
+			base_center(boost::asio::io_context& io_context);
+			virtual ~base_center();
+
+		protected:
+			friend class subscription_manager;
+			void release_topic(const std::string& topic);
+
+			std::map<std::string, subscription_manager> topics_;
+			boost::asio::io_context& ioc_;
 		};
 	}
 }
