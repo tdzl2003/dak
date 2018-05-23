@@ -4,6 +4,7 @@ SET(LOCAL_SOURCES_FILES
 	dak.cpp
 	local_center.h
     local_center.cpp
+	protocol.h
 	server.h
 	server.cpp
 	client_center.h
