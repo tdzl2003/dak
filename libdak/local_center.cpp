@@ -23,7 +23,9 @@ void local_center::shutdown(on_complete_callback&& on_complete)
 
 	if (on_complete)
 	{
-		ioc_.post(std::bind(std::move(on_complete), error_codes::EC_OK));
+		ioc_.post([on_complete = std::move(on_complete)]() {
+			on_complete(error_codes::EC_OK);
+		});
 	}
 }
 
@@ -33,11 +35,13 @@ void local_center::send(
 	on_complete_callback&& on_complete
 )
 {
-	if (shutted_down_) 
+	if (shutted_down_)
 	{
-		if (on_complete) 
+		if (on_complete)
 		{
-			ioc_.post(std::bind(std::move(on_complete), error_codes::EC_CENTER_SHUTTED_DOWN));
+			ioc_.post([on_complete = std::move(on_complete)]() {
+				on_complete(error_codes::EC_CENTER_SHUTTED_DOWN);
+			});
 		}
 		return;
 	}
@@ -49,9 +53,11 @@ void local_center::send(
 		itor->second.post(ioc_, message);
 	}
 
-	if (on_complete) 
+	if (on_complete)
 	{
-		ioc_.post(std::bind(std::move(on_complete), error_codes::EC_OK));
+		ioc_.post([on_complete = std::move(on_complete)]() {
+			on_complete(error_codes::EC_OK);
+		});
 	}
 }
 
@@ -63,9 +69,11 @@ subscription* local_center::subscribe(
 {
 	if (shutted_down_)
 	{
-		if (on_complete) 
+		if (on_complete)
 		{
-			ioc_.post(std::bind(std::move(on_complete), error_codes::EC_CENTER_SHUTTED_DOWN));
+			ioc_.post([on_complete = std::move(on_complete)]() {
+				on_complete(error_codes::EC_CENTER_SHUTTED_DOWN);
+			});
 		}
 		return NULL;
 	}
@@ -85,9 +93,11 @@ subscription* local_center::subscribe(
 
 	auto ret = itor->second.subscribe(std::move(on_message));
 
-	if (on_complete) 
+	if (on_complete)
 	{
-		ioc_.post(std::bind(std::move(on_complete), error_codes::EC_OK));
+		ioc_.post([on_complete = std::move(on_complete)]() {
+			on_complete(error_codes::EC_OK);
+		});
 	}
 
 	return ret;
