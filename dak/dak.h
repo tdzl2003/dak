@@ -7,13 +7,13 @@
 #include <boost/noncopyable.hpp>
 #include <boost/asio.hpp>
 
-namespace dak 
+namespace dak
 {
-	enum class error_codes : int
+	enum class error_codes : uint8_t
 	{
 		EC_OK = 0,
 
-		EC_CENTER_SHUTTED_DOWN = -1,
+		EC_CENTER_SHUTTED_DOWN = 1,
 	};
 
 	// Callback definitions

@@ -4,6 +4,8 @@
 #include <map>
 #include <set>
 
+#include "protocol.h"
+
 namespace dak
 {
 	class server_connection;
@@ -39,17 +41,39 @@ namespace dak
 		void close();
 
 	private:
-		void on_connected();
+		const message_header& header() {
+			return *reinterpret_cast<const message_header*>(read_buffer_.c_str());
+		};
+
+		char* data_start() {
+			return (&read_buffer_[0]) + sizeof(message_header);
+		}
+
+		void read_header();
+		void read_message();
+		void process_message();
+
+		void send_ack(uint16_t ack, error_codes ec);
+		void send_message(const std::string& topic, const std::string& message);
+
+		// TODO: move these function to protocol.h & protocol.cpp
+		static uint32_t read_encoded_uint32(std::string& read_buffer, uint32_t& offset, uint32_t packet_size, bool& ok);
+		static std::string read_string(std::string& read_buffer, uint32_t& offset, uint32_t packet_size, bool& ok);
+
+		static void write_encoded_uint32(std::string& send_buffer, uint32_t value);
+
+		void start_send();
+
 		friend class server;
 
 		server* server_;
 		center* center_;
 		boost::asio::io_context& ioc_;
 		boost::asio::ip::tcp::socket socket_;
-		
+
 		std::string read_buffer_;
 
-		std::string send_buffers_;
+		std::string send_buffer_;
 		std::string sending_buffer_;
 
 		bool closed_;
