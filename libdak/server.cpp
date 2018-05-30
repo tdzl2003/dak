@@ -7,11 +7,6 @@
 
 using namespace dak;
 
-#define MINIMAL_BUFFER_SIZE ((size_t)256)
-#define MAX_TOPIC_SIZE ((size_t)2048)
-#define MAX_MESSAGE_SIZE 65535
-#define MAX_PACKET_SIZE ((size_t)(2 * 2 + MAX_TOPIC_SIZE * 2 + MAX_MESSAGE_SIZE))
-
 server::server(boost::asio::io_context& ioc, center *center, boost::asio::ip::tcp::endpoint endpoint)
 	: ioc_(ioc), center_(center), acceptor_(ioc, endpoint)
 {
@@ -121,7 +116,7 @@ void server_connection::process_message()
 
 	switch (mtype)
 	{
-	case message_type::ET_MESSAGE:
+	case message_type::MT_MESSAGE:
 	{
 		uint16_t ack = (uint16_t)read_encoded_uint32(read_buffer_, offset, packet_size, ok);
 		std::string topic = read_string(read_buffer_, offset, packet_size, ok);
@@ -134,7 +129,7 @@ void server_connection::process_message()
 		});
 		return;
 	}
-	case message_type::ET_SUBSCRIBE:
+	case message_type::MT_SUBSCRIBE:
 	{
 		uint16_t ack = (uint16_t)read_encoded_uint32(read_buffer_, offset, packet_size, ok);
 		if (!ok) break;
@@ -156,66 +151,6 @@ void server_connection::process_message()
 	this->close();
 }
 
-// The first byte contains info of total bytes with top '1's before '0'
-// 0XXXXXXXX 0 ~ 127
-// 10XXXXXXX XXXXXXXX 128 ~ 16383
-uint32_t server_connection::read_encoded_uint32(std::string& read_buffer, uint32_t& offset, uint32_t packet_size, bool& ok)
-{
-	if (!ok) {
-		return 0;
-	}
-	if (offset > packet_size)
-	{
-		ok = false;
-		return 0;
-	}
-	uint8_t first_byte = read_buffer[offset++];
-	uint8_t tail_bytes = 0;
-
-	for (;; tail_bytes++)
-	{
-		if ((first_byte & (1 << (7 - tail_bytes))) == 0)
-		{
-			break;
-		}
-	}
-
-	offset += tail_bytes;
-	if (offset > packet_size)
-	{
-		ok = false;
-		return 0;
-	}
-
-	uint32_t result = tail_bytes == 8 ? 0 : first_byte & (((uint8_t)0xff) >> tail_bytes);
-
-	for (; tail_bytes > 0; --tail_bytes)
-	{
-		result <<= 8;
-		result |= (uint8_t)read_buffer[offset++];
-	}
-	return result;
-}
-
-std::string server_connection::read_string(std::string& read_buffer, uint32_t& offset, uint32_t packet_size, bool& ok)
-{
-	if (!ok) {
-		return std::string();
-	}
-	uint32_t size = read_encoded_uint32(read_buffer, offset, packet_size, ok);
-	if (!ok) {
-		return std::string();
-	}
-	uint32_t start = offset;
-	offset += size;
-	if (offset > packet_size)
-	{
-		ok = false;
-		return std::string();
-	}
-	return read_buffer.substr(start, size);
-}
-
 void server_connection::send_ack(uint16_t ack, error_codes ec)
 {
 	message_header header(ack, ec);
@@ -230,32 +165,13 @@ void server_connection::send_message(const std::string& topic, const std::string
 	std::string tmp;
 	write_encoded_uint32(tmp, (uint32_t)topic.length());
 
-	message_header header(message_type::ET_MESSAGE, (uint32_t)(tmp.length() + topic.length() + message.length()));
+	message_header header(message_type::MT_MESSAGE, (uint32_t)(tmp.length() + topic.length() + message.length()));
 	send_buffer_.append(reinterpret_cast<const char*>(&header), sizeof(header));
 	send_buffer_.append(tmp);
 	send_buffer_.append(topic);
 	send_buffer_.append(message);
 
 	start_send();
-}
-
-void server_connection::write_encoded_uint32(std::string& send_buffer, uint32_t value)
-{
-	int tail_bytes = 0;
-
-	while (tail_bytes < 4 && (value & (((uint32_t)0xffffffff) << (tail_bytes * 7))) != 0)
-	{
-		++tail_bytes;
-	}
-
-	uint8_t first_byte = tail_bytes == 4 ? 0 : (value >> (tail_bytes * 8));
-
-	send_buffer.push_back((char)first_byte);
-
-	for (--tail_bytes; tail_bytes >= 0; --tail_bytes)
-	{
-		send_buffer.push_back((char)(value >> (tail_bytes * 8)));
-	}
 }
 
 void server_connection::start_send()

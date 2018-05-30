@@ -14,7 +14,8 @@ See: [wiki](https://github.com/tdzl2003/dak/wiki)
 
 * [x] Message subscription/send for local center.
 * [ ] Message subscription/send for remote connection.
-* [ ] Unit test for message subscription/send.
+* [ ] General unit test for message subscription/send.
+* [ ] Unit test for special error codes.
 * [ ] Server executable.
 
 #### 0.1.0

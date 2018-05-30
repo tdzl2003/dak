@@ -56,12 +56,6 @@ namespace dak
 		void send_ack(uint16_t ack, error_codes ec);
 		void send_message(const std::string& topic, const std::string& message);
 
-		// TODO: move these function to protocol.h & protocol.cpp
-		static uint32_t read_encoded_uint32(std::string& read_buffer, uint32_t& offset, uint32_t packet_size, bool& ok);
-		static std::string read_string(std::string& read_buffer, uint32_t& offset, uint32_t packet_size, bool& ok);
-
-		static void write_encoded_uint32(std::string& send_buffer, uint32_t value);
-
 		void start_send();
 
 		friend class server;

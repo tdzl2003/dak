@@ -5,6 +5,7 @@ SET(LOCAL_SOURCES_FILES
 	local_center.h
     local_center.cpp
 	protocol.h
+	protocol.cpp
 	server.h
 	server.cpp
 	client_center.h

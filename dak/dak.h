@@ -13,7 +13,20 @@ namespace dak
 	{
 		EC_OK = 0,
 
+		// Center was shutted down.
 		EC_CENTER_SHUTTED_DOWN = 1,
+
+		// Subscription/SetMeta was canceled before operation completes.
+		EC_OPERATION_CANCELED = 2,
+
+		// Failed to establish connection with server.
+		EC_CONNECTION_FAILED = 0x11,
+
+		// Connection was established, but closed by server or network issue.
+		EC_CONNECTION_CLOSED = 0x12,
+
+		// At most 65536 pending operations was allowed.
+		EC_TOO_MANY_OPERATIONS = 0x13,
 	};
 
 	// Callback definitions
