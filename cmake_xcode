@@ -1,2 +1,2 @@
 cd `dirname $0`
-cmake -H. -Bbuild/xcode -G "Xcode"
+cmake -H. -Bbuild/xcode -G "Xcode"  -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake

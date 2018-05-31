@@ -80,7 +80,7 @@ Generate project via `CMake`:
 
 ```bash
 # Linux/MacOS:
-cmake -H. -Bbuild -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT\scripts\buildsystems\vcpkg.cmake
+cmake -H. -Bbuild -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake
 cd build && make
 
 # Windows:
